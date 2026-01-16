@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BULK | Infinite Markets</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --text-main: #fcfcf0;
+            --text-muted: #888888;
+            --accent-gold: #D4AF37;
+            --accent-gold-glow: rgba(212, 175, 55, 0.4);
+            --card-bg-top: #0F1014;
+            --card-bg-btm: #050505;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* STATIC GRAIN (No animation) */
+        #noise {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            pointer-events: none; 
+            z-index: 900; 
+            opacity: 0.05; /* Slightly lowered opacity for cleaner look */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+        }
+
+        #starfield {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            z-index: 0; 
+            pointer-events: none;
+        }
+
+        /* Ambient glow overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.08) 0%, transparent 50%);
+            z-index: 1;
+            pointer-events: none;
+            animation: ambientPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes ambientPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        header {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            padding: 2rem 3rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            z-index: 100; 
+            background: linear-gradient(180deg, rgba(5,5,5,0.9) 0%, transparent 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container:hover {
+            transform: translateY(-2px);
+        }
+
+        /* BIGGER LOGO */
+        .logo-img { 
+            height: 48px; 
+            width: auto; 
+            filter: drop-shadow(0 0 20px var(--accent-gold-glow));
+            transition: filter 0.3s ease;
+        }
+
+        .logo-img:hover {
+            filter: drop-shadow(0 0 30px var(--accent-gold-glow));
+        }
+
+        .status-badge {
+            font-size: 0.7rem; 
+            border: 1px solid var(--accent-gold);
+            background: rgba(212, 175, 55, 0.05);
+            padding: 0.4rem 1rem; 
+            border-radius: 99px;
+            text-transform: uppercase; 
+            letter-spacing: 0.15em;
+            color: var(--accent-gold);
+            box-shadow: 0 0 20px var(--accent-gold-glow), inset 0 0 10px rgba(212, 175, 55, 0.1);
+            animation: badgePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 20px var(--accent-gold-glow), inset 0 0 10px rgba(212, 175, 55, 0.1); }
+            50% { box-shadow: 0 0 30px var(--accent-gold-glow), inset 0 0 15px rgba(212, 175, 55, 0.15); }
+        }
+
+        main {
+            position: relative; 
+            z-index: 10; 
+            flex: 1;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            padding: 2rem; 
+            padding-top: 8rem;
+        }
+
+        .hero-text {
+            text-align: center; 
+            margin-bottom: 3rem; 
+            opacity: 0;
+            animation: fadeInUp 1.4s ease-out forwards;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 6vw, 5.5rem);
+            font-weight: 400; 
+            line-height: 1.1; 
+            margin-bottom: 1.5rem;
+            background: linear-gradient(180deg, #fff 0%, var(--accent-gold) 50%, #888 100%);
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            text-shadow: 0 0 40px var(--accent-gold-glow);
+        }
+
+        p.subtitle {
+            font-size: 0.95rem; 
+            color: var(--text-muted); 
+            letter-spacing: 0.08em;
+            max-width: 600px; 
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .generator-container { 
+            width: 100%; 
+            max-width: 500px; 
+            perspective: 1500px; 
+        }
+        
+        .input-group { 
+            position: relative; 
+            margin-bottom: 2rem; 
+            opacity: 0; 
+            animation: fadeInUp 1.4s 0.3s ease-out forwards; 
+        }
+
+        .input-wrapper {
+            position: relative; 
+            display: flex; 
+            align-items: center;
+            border-bottom: 2px solid rgba(252, 252, 240, 0.2); 
+            transition: all 0.4s ease;
+        }
+
+        .input-wrapper:focus-within { 
+            border-bottom: 2px solid var(--accent-gold);
+            box-shadow: 0 2px 20px var(--accent-gold-glow);
+        }
+
+        .at-symbol { 
+            font-size: 1.3rem; 
+            color: var(--accent-gold); 
+            margin-right: 0.5rem;
+            text-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        input[type="text"] {
+            width: 100%; 
+            background: transparent; 
+            border: none;
+            color: var(--text-main); 
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem; 
+            padding: 1.2rem 0; 
+            outline: none;
+            letter-spacing: 0.02em;
+        }
+
+        input[type="text"]::placeholder { color: #444; }
+
+        .action-btn {
+            margin-top: 2rem; 
+            width: 100%;
+            background: linear-gradient(135deg, var(--text-main) 0%, #e0e0d0 100%);
+            color: var(--bg-color);
+            border: none; 
+            padding: 1.2rem;
+            font-family: 'Space Mono', monospace; 
+            font-weight: 700; 
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
+            box-shadow: 0 4px 20px rgba(252, 252, 240, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:hover { 
+            background: linear-gradient(135deg, #fff 0%, var(--accent-gold) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(252, 252, 240, 0.5);
+        }
+
+        .action-btn:disabled { 
+            background: #333; 
+            color: #666; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none; 
+        }
+
+        .card-scene {
+            width: 100%; 
+            height: 300px;
+            position: relative; 
+            display: none; 
+            justify-content: center; 
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            width: 100%; 
+            height: 100%;
+            background: linear-gradient(180deg, var(--card-bg-top) 0%, var(--card-bg-btm) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            position: relative; 
+            overflow: hidden;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            padding: 2rem;
+            box-shadow: 
+                0 30px 60px rgba(0,0,0,0.8),
+                0 0 40px var(--accent-gold-glow),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: transform 0.1s ease-out; 
+            transform-style: preserve-3d;
+            background-image: 
+                linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%),
+                url("data:image/svg+xml,%3Csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='rgba(212,175,55,0.08)'/%3E%3C/svg%3E");
+        }
+
+        /* Enhanced holographic sheen */
+        .card::after {
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: -100%; 
+            width: 200%; 
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+            transform: skewX(-20deg); 
+            transition: 0.8s;
+            pointer-events: none;
+        }
+
+        .card:hover::after { 
+            left: 100%; 
+            transition: 1.2s; 
+        }
+
+        .mountains-svg {
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            height: auto;
+            z-index: 1;
+            opacity: 0.7;
+        }
+        
+        .card-content {
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            z-index: 3; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .card-header {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+        }
+
+        .card-header-logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.6rem; 
+        }
+
+        .card-header-logo img { 
+            height: 28px; 
+            width: auto;
+            filter: drop-shadow(0 0 10px var(--accent-gold-glow));
+        }
+
+        .card-header-logo span {
+            font-family: 'Playfair Display'; 
+            font-weight: 700; 
+            font-size: 1.3rem; 
+            letter-spacing: 2px; 
+            color: #fff;
+            text-shadow: 0 0 20px var(--accent-gold-glow);
+        }
+
+        .card-tier {
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            color: var(--accent-gold);
+            text-shadow: 0 0 15px var(--accent-gold-glow);
+            font-weight: bold;
+            letter-spacing: 0.08em;
+            padding: 0.3rem 0.6rem;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 4px;
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .card-body { 
+            display: flex; 
+            align-items: center; 
+            gap: 1.2rem; 
+            margin-top: auto; 
+            margin-bottom: 1.2rem; 
+        }
+        
+        .card-avatar {
+            width: 70px; 
+            height: 70px; 
+            border-radius: 50%;
+            border: 3px solid rgba(212, 175, 55, 0.6); 
+            object-fit: cover; 
+            background: #222;
+            box-shadow: 
+                0 4px 20px rgba(0,0,0,0.7),
+                0 0 20px var(--accent-gold-glow);
+        }
+
+        .card-name { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 1.6rem;
+            color: #fff; 
+            line-height: 1.1; 
+            margin-bottom: 4px; 
+            text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 20px var(--accent-gold-glow);
+            letter-spacing: -0.01em;
+        }
+
+        .card-handle { 
+            font-family: 'Space Mono', monospace; 
+            font-size: 1rem;
+            color: #ddd; 
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8); 
+        }
+
+        .card-footer {
+            border-top: 1px solid rgba(212, 175, 55, 0.2); 
+            padding-top: 1rem;
+            width: 100%;
+        }
+
+        .card-id { 
+            font-size: 0.7rem; 
+            color: var(--accent-gold); 
+            letter-spacing: 0.12em;
+            text-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .card-right-layer {
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            width: 100%; 
+            height: 100%;
+            z-index: 2; 
+            pointer-events: none; 
+            overflow: hidden;
+        }
+
+        .yeti-mascot {
+            position: absolute; 
+            bottom: -10%; 
+            right: -5%;
+            width: 200px; 
+            height: auto; 
+            transform: rotate(-5deg);
+            filter: drop-shadow(0 0 25px rgba(0,0,0,0.9));
+            opacity: 0.95;
+        }
+
+        .result-actions { 
+            display: none; 
+            gap: 1rem; 
+            width: 100%; 
+            animation: fadeIn 0.6s forwards; 
+        }
+
+        .secondary-btn {
+            background: transparent; 
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: var(--accent-gold);
+            flex: 1; 
+            padding: 1rem;
+            font-family: 'Space Mono', monospace; 
+            text-transform: uppercase;
+            cursor: pointer; 
+            transition: all 0.3s;
+            letter-spacing: 0.1em;
+            font-size: 0.85rem;
+        }
+
+        .secondary-btn:hover { 
+            border-color: var(--accent-gold);
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 20px var(--accent-gold-glow);
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            inset: 0;
+            background: rgba(0,0,0,0.9); 
+            backdrop-filter: blur(10px);
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #151515 0%, #0a0a0a 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            padding: 2.5rem;
+            max-width: 420px; 
+            width: 90%;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px var(--accent-gold-glow);
+        }
+
+        .modal h3 { 
+            font-family: 'Playfair Display'; 
+            font-size: 1.8rem; 
+            margin-bottom: 1.5rem;
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px var(--accent-gold-glow);
+        }
+
+        .upload-row { 
+            display: flex; 
+            align-items: center; 
+            gap: 1.2rem; 
+            margin-bottom: 1.5rem; 
+        }
+
+        .modal-avatar-preview { 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 50%; 
+            background: #222; 
+            object-fit: cover; 
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+
+        .file-label { 
+            cursor: pointer; 
+            text-decoration: underline; 
+            color: var(--accent-gold); 
+            font-size: 0.85rem;
+            transition: 0.3s;
+        }
+
+        .file-label:hover {
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .modal-input {
+            width: 100%; 
+            background: #1a1a1a; 
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: white;
+            padding: 12px; 
+            font-family: 'Space Mono'; 
+            margin-bottom: 1.2rem; 
+            outline: none;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .modal-input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px var(--accent-gold-glow);
+        }
+        
+        .loader { 
+            display: none; 
+            font-size: 0.9rem; 
+            color: var(--accent-gold); 
+            margin-top: 1rem;
+            text-shadow: 0 0 10px var(--accent-gold-glow);
+        }
+
+        .blink { animation: blinker 1s linear infinite; }
+        
+        @keyframes fadeInUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        footer { 
+            text-align: center; 
+            padding: 2rem; 
+            font-size: 0.65rem; 
+            color: #444; 
+            letter-spacing: 0.2em;
+            z-index: 10;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.5rem; }
+            .card-scene { height: 250px; }
+            .yeti-mascot { width: 150px; }
+            .logo-img { height: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="noise"></div>
+    <canvas id="starfield"></canvas>
+
+    <header>
+        <div class="logo-container">
+            <img src="logo.png" alt="BULK" class="logo-img" onerror="this.style.display='none'; document.getElementById('txt-logo').style.display='block'">
+            <span id="txt-logo" style="display:none; font-family:'Playfair Display'; font-weight:700; font-size:1.5rem; color: var(--accent-gold); text-shadow: 0 0 20px var(--accent-gold-glow);">BULK</span>
+        </div>
+        <div class="status-badge">Testnet Live Soon</div>
+    </header>
+
+    <main>
+        <div class="hero-text" id="hero">
+            <h1>One Exchange.<br>Infinite Markets.</h1>
+            <p class="subtitle">Secure your spot in the order book. Generate your testnet validator credential.</p>
+        </div>
+
+        <div class="generator-container">
+            <div id="input-phase">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <span class="at-symbol">@</span>
+                        <input type="text" id="username" placeholder="twitter_handle" autocomplete="off" maxlength="15">
+                    </div>
+                </div>
+                <button class="action-btn" id="init-btn">Initialize Access</button>
+                <div class="loader" id="loader">
+                    > Connecting to X API... <span class="blink">_</span>
+                </div>
+            </div>
+
+            <div id="card-phase" style="display: none;">
+                <div class="card-scene" id="card-scene">
+                    <div class="card" id="tilt-card">
+                        
+                        <svg class="mountains-svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+                            <path d="M0 120 L0 80 L30 50 L60 90 L90 40 L130 100 L160 30 L200 90 L240 60 L280 110 L320 50 L360 80 L400 40 L400 120 Z" fill="#151515" opacity="0.6"></path>
+                            <path d="M0 120 L0 100 L40 60 L80 110 L120 70 L160 110 L200 80 L240 120 Z" fill="#0a0a0a" opacity="0.9"></path>
+                        </svg>
+
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="card-header-logo">
+                                    <img src="logo.png" onerror="this.style.display='none'">
+                                    <span>BULK</span>
+                                </div>
+                                <div class="card-tier">VALIDATOR NODE</div>
+                            </div>
+
+                            <div class="card-body">
+                                <img src="" class="card-avatar" id="display-avatar" crossorigin="anonymous">
+                                <div>
+                                    <div class="card-name" id="display-name">Trader</div>
+                                    <div class="card-handle" id="display-handle">@trader</div>
+                                </div>
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="card-id" id="display-id">ID: ----</div>
+                            </div>
+                        </div>
+
+                        <div class="card-right-layer">
+                            <img src="bulk.png" class="yeti-mascot" id="display-yeti" crossorigin="anonymous">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <button class="action-btn" id="download-btn">Download High-Res</button>
+                    <button class="secondary-btn" id="share-btn">Share on X</button>
+                </div>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button id="reset-btn" style="background:none; border:none; color:#666; cursor:pointer; font-family:'Space Mono'; text-decoration:underline;">Create New</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h3>Identity Verification</h3>
+            <div class="upload-row">
+                <img id="modal-pfp" class="modal-avatar-preview" src="">
+                <label class="file-label">
+                    Change Photo <input type="file" id="file-input" hidden accept="image/*">
+                </label>
+            </div>
+            <label style="color:#888; font-size:0.7rem; text-transform: uppercase; letter-spacing: 0.1em;">Display Name</label>
+            <input type="text" class="modal-input" id="modal-name">
+            <label style="color:#888; font-size:0.7rem; text-transform: uppercase; letter-spacing: 0.1em;">Handle</label>
+            <input type="text" class="modal-input" id="modal-handle" readonly>
+            <button class="action-btn" id="btn-mint">Mint Access Card</button>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 BULK TRADE. DECENTRALIZED PERPETUALS.</footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ASSETS = {
+                logo: 'logo.png',
+                yeti: 'bulk.png',
+                fallbackPfp: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23222"/%3E%3Ccircle cx="50" cy="35" r="18" fill="%23666"/%3E%3Cpath d="M15 85 Q50 55 85 85 L85 100 L15 100 Z" fill="%23666"/%3E%3C/svg%3E'
+            };
+
+            const cvs = document.getElementById('starfield');
+            const ctx = cvs.getContext('2d');
+            let w, h;
+            const resize = () => { w = cvs.width = window.innerWidth; h = cvs.height = window.innerHeight; };
+            window.addEventListener('resize', resize); resize();
+            
+            // Particle System with gold tint
+            class Particle {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.size = Math.random() * 1.8 + 0.5;
+                    this.speedY = Math.random() * 0.4 - 0.2;
+                    this.speedX = Math.random() * 0.4 - 0.2;
+                    this.life = Math.random();
+                    this.alpha = Math.random() * 0.6;
+                    this.isGold = Math.random() > 0.85; 
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.life -= 0.001;
+                    if (this.life <= 0 || this.x < 0 || this.x > w || this.y < 0 || this.y > h) {
+                        this.reset();
+                    }
+                }
+                draw() {
+                    const color = this.isGold ? '212, 175, 55' : '252, 252, 240';
+                    ctx.fillStyle = `rgba(${color}, ${this.alpha * this.life})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    if(this.isGold && this.size > 1.2) {
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = `rgba(212, 175, 55, 0.5)`;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    }
+                }
+            }
+
+            // Beam System
+            class Beam {
+                constructor() {
+                    this.x = Math.random() * w;
+                    this.width = Math.random() * 60 + 20;
+                    this.opacity = 0;
+                    this.state = 'in';
+                    this.isGold = Math.random() > 0.7; 
+                }
+                update() {
+                    if(this.state === 'in') {
+                        this.opacity += 0.003;
+                        if(this.opacity > (this.isGold ? 0.12 : 0.08)) this.state = 'out';
+                    } else {
+                        this.opacity -= 0.003;
+                        if(this.opacity <= 0) {
+                            this.x = Math.random() * w;
+                            this.state = 'in';
+                            this.isGold = Math.random() > 0.7;
+                        }
+                    }
+                }
+                draw() {
+                    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+                    if(this.isGold) {
+                        gradient.addColorStop(0, `rgba(212, 175, 55, 0)`);
+                        gradient.addColorStop(0.5, `rgba(212, 175, 55, ${this.opacity})`);
+                        gradient.addColorStop(1, `rgba(212, 175, 55, 0)`);
+                    } else {
+                        gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
+                        gradient.addColorStop(0.5, `rgba(255, 255, 255, ${this.opacity})`);
+                        gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+                    }
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(this.x, 0, this.width, h);
+                }
+            }
+
+            const particles = Array.from({length:120}, () => new Particle());
+            const beams = Array.from({length: 6}, () => new Beam());
+
+            const drawStars = () => {
+                ctx.clearRect(0,0,w,h);
+                beams.forEach(b => { b.update(); b.draw(); });
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(drawStars);
+            };
+            drawStars();
+
+            const dom = {
+                init: document.getElementById('init-btn'),
+                user: document.getElementById('username'),
+                loader: document.getElementById('loader'),
+                modal: document.getElementById('modal'),
+                modalName: document.getElementById('modal-name'),
+                modalHandle: document.getElementById('modal-handle'),
+                modalPfp: document.getElementById('modal-pfp'),
+                fileIn: document.getElementById('file-input'),
+                mint: document.getElementById('btn-mint'),
+                inputPh: document.getElementById('input-phase'),
+                cardPh: document.getElementById('card-phase'),
+                dName: document.getElementById('display-name'),
+                dHandle: document.getElementById('display-handle'),
+                dId: document.getElementById('display-id'),
+                dAvatar: document.getElementById('display-avatar'),
+                dYeti: document.getElementById('display-yeti')
+            };
+
+            let state = { handle: '', name: '', pfp: '', id: '' };
+
+            const loadAvatar = async (username) => {
+                const attempts = [
+                    `https://unavatar.io/twitter/${username}`,
+                    `https://unavatar.io/x/${username}`,
+                    `https://ui-avatars.com/api/?name=${username}&size=200&background=1a1a1a&color=D4AF37&bold=true`,
+                    ASSETS.fallbackPfp
+                ];
+
+                for (let src of attempts) {
+                    try {
+                        const testImg = new Image();
+                        testImg.crossOrigin = "anonymous";
+                        
+                        const loaded = await new Promise((resolve) => {
+                            testImg.onload = () => resolve(true);
+                            testImg.onerror = () => resolve(false);
+                            testImg.src = src;
+                            setTimeout(() => resolve(false), 3000);
+                        });
+
+                        if (loaded) return src;
+                    } catch (e) { continue; }
+                }
+                return ASSETS.fallbackPfp;
+            };
+
+            dom.init.addEventListener('click', async () => {
+                const val = dom.user.value.trim().replace('@','');
+                if(!val) return;
+                dom.init.disabled = true;
+                dom.loader.style.display = 'block';
+                
+                const avatarUrl = await loadAvatar(val);
+                
+                state.handle = '@' + val;
+                state.name = val.charAt(0).toUpperCase() + val.slice(1);
+                state.pfp = avatarUrl;
+                
+                dom.loader.style.display = 'none';
+                dom.modalHandle.value = state.handle;
+                dom.modalName.value = state.name;
+                dom.modalPfp.src = state.pfp;
+                
+                dom.modal.style.display = 'flex';
+            });
+
+            dom.fileIn.addEventListener('change', (e) => {
+                if(e.target.files[0]) {
+                    const r = new FileReader();
+                    r.onload = (ev) => { 
+                        state.pfp = ev.target.result; 
+                        dom.modalPfp.src = state.pfp; 
+                    };
+                    r.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            dom.mint.addEventListener('click', () => {
+                state.name = dom.modalName.value;
+                state.id = 'ID: ' + Math.random().toString(16).substr(2, 8).toUpperCase().match(/.{1,4}/g).join('-');
+                
+                dom.dName.innerText = state.name;
+                dom.dHandle.innerText = state.handle;
+                dom.dId.innerText = state.id;
+                dom.dAvatar.src = state.pfp;
+                dom.dYeti.src = ASSETS.yeti;
+                
+                dom.modal.style.display = 'none';
+                dom.inputPh.style.display = 'none';
+                document.getElementById('hero').style.display = 'none';
+                
+                dom.cardPh.style.display = 'block';
+                document.querySelector('.card-scene').style.display = 'flex';
+                document.querySelector('.result-actions').style.display = 'flex';
+            });
+
+            const loadImg = (src) => new Promise((resolve) => {
+                if(!src || src === '') return resolve(null);
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = src;
+                setTimeout(() => resolve(null), 5000);
+            });
+
+            document.getElementById('download-btn').addEventListener('click', async () => {
+                const btn = document.getElementById('download-btn');
+                btn.innerText = "Generating...";
+                btn.disabled = true;
+
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1200;
+                    canvas.height = 700;
+                    const ctx = canvas.getContext('2d');
+
+                    const grad = ctx.createLinearGradient(0, 0, 0, 700);
+                    grad.addColorStop(0, '#15151a');
+                    grad.addColorStop(1, '#000000');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, 1200, 700);
+
+                    const glowGrad = ctx.createRadialGradient(600, 350, 0, 600, 350, 600);
+                    glowGrad.addColorStop(0, 'rgba(212, 175, 55, 0.08)');
+                    glowGrad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = glowGrad;
+                    ctx.fillRect(0, 0, 1200, 700);
+
+                    const drawMount = (color, yOffset, spikes) => {
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.moveTo(0, 700);
+                        let x = 0;
+                        const step = 1200 / spikes;
+                        for(let i=0; i<=spikes; i++) {
+                            const h = Math.random() * 150 + 50;
+                            ctx.lineTo(x, 700 - h - yOffset);
+                            x += step;
+                        }
+                        ctx.lineTo(1200, 700);
+                        ctx.closePath();
+                        ctx.fill();
+                    };
+                    
+                    drawMount('#1a1a1a', 50, 12);
+                    drawMount('#0a0a0a', 0, 8);
+
+                    const [logoImg, yetiImg, avatarImg] = await Promise.all([
+                        loadImg(ASSETS.logo),
+                        loadImg(ASSETS.yeti),
+                        loadImg(state.pfp)
+                    ]);
+
+                    if(logoImg) {
+                        ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
+                        ctx.shadowBlur = 20;
+                        ctx.drawImage(logoImg, 60, 50, 60, 60); 
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.font = "bold 48px 'Playfair Display', serif";
+                    ctx.fillStyle = "#D4AF37";
+                    ctx.shadowColor = "rgba(212, 175, 55, 0.6)";
+                    ctx.shadowBlur = 15;
+                    ctx.fillText("BULK", logoImg ? 135 : 60, 95);
+                    ctx.shadowBlur = 0;
+
+                    ctx.font = "bold 24px 'Space Mono', monospace";
+                    ctx.fillStyle = "#D4AF37";
+                    ctx.textAlign = "right";
+                    ctx.shadowColor = "rgba(212, 175, 55, 0.6)";
+                    ctx.shadowBlur = 15;
+                    ctx.fillText("VALIDATOR NODE", 1140, 85);
+                    ctx.shadowBlur = 0;
+                    ctx.textAlign = "left";
+
+                    if(yetiImg) {
+                        ctx.shadowColor = "rgba(0,0,0,0.7)";
+                        ctx.shadowBlur = 30;
+                        const scale = Math.min(650 / yetiImg.width, 650 / yetiImg.height);
+                        const w = yetiImg.width * scale;
+                        const h = yetiImg.height * scale;
+                        ctx.drawImage(yetiImg, 700, 180, w, h);
+                        ctx.shadowBlur = 0;
+                    }
+
+                    if(avatarImg) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(120, 500, 55, 0, Math.PI * 2);
+                        ctx.fillStyle = "#000"; 
+                        ctx.fill();
+                        
+                        ctx.lineWidth = 5; 
+                        ctx.strokeStyle = "#D4AF37";
+                        ctx.shadowColor = "rgba(212, 175, 55, 0.6)";
+                        ctx.shadowBlur = 15;
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                        
+                        ctx.clip();
+                        ctx.drawImage(avatarImg, 65, 445, 110, 110);
+                        ctx.restore();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(120, 500, 55, 0, Math.PI * 2);
+                        ctx.fillStyle = "#222"; 
+                        ctx.fill();
+                        ctx.lineWidth = 5; 
+                        ctx.strokeStyle = "#D4AF37";
+                        ctx.shadowColor = "rgba(212, 175, 55, 0.6)";
+                        ctx.shadowBlur = 15;
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.fillStyle = "#fff";
+                    ctx.font = "bold 58px 'Playfair Display', serif";
+                    ctx.shadowColor = "rgba(212, 175, 55, 0.4)";
+                    ctx.shadowBlur = 20;
+                    ctx.fillText(state.name, 200, 485);
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = "#ddd";
+                    ctx.font = "36px 'Space Mono', monospace";
+                    ctx.fillText(state.handle, 200, 535);
+
+                    ctx.fillStyle = "#D4AF37";
+                    ctx.font = "22px 'Space Mono', monospace";
+                    ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
+                    ctx.shadowBlur = 10;
+                    ctx.fillText(state.id, 60, 630);
+                    ctx.shadowBlur = 0;
+
+                    const link = document.createElement('a');
+                    link.download = `bulk_validator_${state.handle.replace('@','')}.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    link.click();
+                    
+                    btn.innerText = "Download High-Res";
+                    btn.disabled = false;
+                } catch(err) {
+                    console.error(err);
+                    alert('Error generating image');
+                    btn.innerText = "Download High-Res";
+                    btn.disabled = false;
+                }
+            });
+
+            const card = document.getElementById('tilt-card');
+            const scene = document.getElementById('card-scene');
+            scene.addEventListener('mousemove', (e) => {
+                const r = scene.getBoundingClientRect();
+                const x = (e.clientX - r.left - r.width/2)/20;
+                const y = (e.clientY - r.top - r.height/2)/-20;
+                card.style.transform = `perspective(1500px) rotateX(${y}deg) rotateY(${x}deg)`;
+            });
+            scene.addEventListener('mouseleave', () => card.style.transform = 'none');
+            
+            document.getElementById('share-btn').addEventListener('click', () => {
+               window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent("I've secured my Validator Node on BULK Testnet.\n\nInfinite Markets. One Exchange.\n\nGet yours:")}&url=bulkcard.lol`);
+            });
+            document.getElementById('reset-btn').addEventListener('click', () => location.reload());
+        });
+    </script>
+</body>
+</html>
