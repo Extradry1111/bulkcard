@@ -905,37 +905,49 @@
                     canvas.width = 1200;
                     canvas.height = 700;
                     const ctx = canvas.getContext('2d');
-
-                    const grad = ctx.createLinearGradient(0, 0, 0, 700);
-                    grad.addColorStop(0, '#15151a');
-                    grad.addColorStop(1, '#000000');
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(0, 0, 1200, 700);
-
-                    const glowGrad = ctx.createRadialGradient(600, 350, 0, 600, 350, 600);
-                    glowGrad.addColorStop(0, 'rgba(212, 175, 55, 0.08)');
-                    glowGrad.addColorStop(1, 'transparent');
-                    ctx.fillStyle = glowGrad;
-                    ctx.fillRect(0, 0, 1200, 700);
-
-                    const drawMount = (color, yOffset, spikes) => {
-                        ctx.fillStyle = color;
-                        ctx.beginPath();
-                        ctx.moveTo(0, 700);
-                        let x = 0;
-                        const step = 1200 / spikes;
-                        for(let i=0; i<=spikes; i++) {
-                            const h = Math.random() * 150 + 50;
-                            ctx.lineTo(x, 700 - h - yOffset);
-                            x += step;
-                        }
-                        ctx.lineTo(1200, 700);
-                        ctx.closePath();
-                        ctx.fill();
-                    };
                     
-                    drawMount('#1a1a1a', 50, 12);
-                    drawMount('#0a0a0a', 0, 8);
+                    const w = canvas.width;
+                    const h = canvas.height;
+
+                    // 1. Dark Background
+                    ctx.fillStyle = '#050505';
+                    ctx.fillRect(0,0,w,h);
+
+                    // 2. God Rays / Beams
+                    const grad = ctx.createLinearGradient(0,0,w,0);
+                    grad.addColorStop(0, '#0a0a0a');
+                    grad.addColorStop(0.5, '#141414'); // Center beam
+                    grad.addColorStop(1, '#0a0a0a');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0,0,w,h);
+
+                    // 3. Noise (Simulated)
+                    for(let i=0; i<30000; i++) {
+                        ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.05})`;
+                        ctx.fillRect(Math.random()*w, Math.random()*h, 2, 2);
+                    }
+
+                    // 4. Draw Mountains (Scaled Up)
+                    const mtnGrad = ctx.createLinearGradient(0, 0, 0, h);
+                    mtnGrad.addColorStop(0.4, 'transparent');
+                    mtnGrad.addColorStop(0.7, '#111');
+                    mtnGrad.addColorStop(1, '#000');
+                    ctx.fillStyle = mtnGrad;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, h);
+                    let cy = h * 0.6;
+                    ctx.lineTo(0, cy);
+                    const step = w / 80;
+                    for(let i=0; i<=80; i++) {
+                        const noise = (Math.random() - 0.5) * 60;
+                        cy += noise;
+                        if(cy < h*0.4) cy = h*0.4;
+                        if(cy > h*0.9) cy = h*0.9;
+                        ctx.lineTo(i*step, cy);
+                    }
+                    ctx.lineTo(w, h);
+                    ctx.fill();
 
                     const [logoImg, yetiImg, avatarImg] = await Promise.all([
                         loadImg(ASSETS.logo),
